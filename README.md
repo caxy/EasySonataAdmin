@@ -1,4 +1,4 @@
-easy-sonata_admin
+easy-sonata-admin
 =================
 
 ###Getting Started
