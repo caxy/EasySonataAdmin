@@ -7,7 +7,7 @@
     "email" : "dwnek@caxy.com"
   }],
   "keywords" : [
-    "sonata admin configuration"
+    "sonata", "admin", "configuration"
   ],
   "license" : [
     "MIT"
@@ -16,16 +16,13 @@
     "sonata-project/admin-bundle": "2.3.*"
   },
   "autoload" : {
-    "psr-0" : {
-      "Caxy\\EasySonataAdminBundle" : ""
+    "psr-4" : {
+      "Caxy\\EasySonataAdminBundle\\" : ""
     }
   },
-  "target-dir" : "Caxy/EasySonataAdminBundle",
-  "repositories" : [{
-  }],
   "extra" : {
     "branch-alias" : {
-      "dev-master" : "master"
+      "dev-master" : "1.0.x-dev"
     }
   }
 }
