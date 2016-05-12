@@ -1,6 +1,6 @@
 <?php
 
-namespace Caxy\EasySonataAdminBundle\DependencyInjection;
+namespace Caxy\EasySonataAdminBundle\DependencyInjection\Compiler;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
