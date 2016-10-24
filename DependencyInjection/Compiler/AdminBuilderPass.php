@@ -14,8 +14,7 @@ class AdminBuilderPass implements CompilerPassInterface
 
         $definitions = array();
 
-        foreach ($config as $entities) {
-            foreach ($entities as $name => $entity) {
+            foreach ($config['entities'] as $name => $entity) {
                 $class = $entity['class'];
 
                 $definition = new Definition('Caxy\EasySonataAdminBundle\Admin\AutoAdmin',
@@ -24,7 +23,6 @@ class AdminBuilderPass implements CompilerPassInterface
                 $definition->addTag('sonata.admin', array('manager_type' => 'orm', 'label' => $name));
 
                 $definitions['admin.'.$name] = $definition;
-            }
         }
 
         $container->addDefinitions($definitions);
