@@ -8,6 +8,7 @@ use Sonata\AdminBundle\Datagrid\ListMapper;
 use Sonata\AdminBundle\Datagrid\DatagridMapper;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class AutoAdmin extends Admin
 {
@@ -51,7 +52,7 @@ class AutoAdmin extends Admin
     {
         $actions = parent::getBatchActions();
 
-        if ($this->config['batch_actions'] !== null) {
+        if (array_key_exists('batch_actions', $this->config) && $this->config['batch_actions'] !== null) {
             foreach ($this->config['batch_actions'] as $action) {
                 if (substr($action, 0, 1) === '-') {
                     unset($actions[substr($action, 1)]);
@@ -69,18 +70,25 @@ class AutoAdmin extends Admin
      */
     protected function configureFormFields(FormMapper $form)
     {
-        $config = $this->config['edit'];
-
-        if ($config) {
-            foreach ($config['fields'] as $field) {
-                $form->add($field['property'], array_key_exists('type', $field) ? $field['type'] : null, array_key_exists('type_options', $field) ? $field['type_options'] : null);
-            }
-            $actions = array();
-
-            foreach ($config['actions'] as $action) {
-                $actions[$action] = array();
-            }
+        if($this->isNewObject() && $this->hasConfig('new')) {
+            $method = 'new';
+        } else {
+            $method = 'form';
         }
+
+        $this->preventUnauthorizedAccess($method);
+
+        if (($config = $this->getConfig($method)) !== false) {
+            $this->buildMapper($config, $form);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isNewObject()
+    {
+        return !$this->id($this->getSubject());
     }
 
     /**
@@ -88,23 +96,26 @@ class AutoAdmin extends Admin
      */
     protected function configureListFields(ListMapper $list)
     {
-        $config = $this->config['list'];
+        $this->preventUnauthorizedAccess('list');
 
-        $this->buildMapper($config, $list);
+        if (($config = $this->getConfig('list')) !== false) {
 
-        $actions = array();
+            $this->buildMapper($config, $list);
 
-        foreach ($config['actions'] as $action) {
-            if (is_array($action)) {
-                $actions = array_merge($actions, $action);
-            } else {
-                $actions[$action] = array();
+            $actions = array();
+
+            foreach ($config['actions'] as $action) {
+                if (is_array($action)) {
+                    $actions = array_merge($actions, $action);
+                } else {
+                    $actions[$action] = array();
+                }
             }
-        }
 
-        $list->add('_action', 'actions', array(
-            'actions' => $actions,
-        ));
+            $list->add('_action', 'actions', array(
+                'actions' => $actions,
+            ));
+        }
     }
 
     /**
@@ -112,9 +123,11 @@ class AutoAdmin extends Admin
      */
     protected function configureDatagridFilters(DatagridMapper $filter)
     {
-        $config = $this->config['filter'];
+        if(array_key_exists('filter', $this->config) && $this->config['filter']) {
+            $config = $this->config['filter'];
 
-        $this->buildMapper($config, $filter);
+            $this->buildMapper($config, $filter);
+        }
     }
 
     /**
@@ -122,9 +135,36 @@ class AutoAdmin extends Admin
      */
     protected function configureShowFields(ShowMapper $filter)
     {
-        $config = $this->config['show'];
+        $this->preventUnauthorizedAccess('show');
 
-        $this->buildMapper($config, $filter);
+        if (($config = $this->getConfig('show')) !== false) {
+
+            $this->buildMapper($config, $filter);
+        }
+    }
+
+    private function preventUnauthorizedAccess($action)
+    {
+        $config = $this->getConfig($action);
+
+        if($config && array_key_exists('role', $config)) {
+            if(!$this->isGranted($config['role'])) {
+                throw new AccessDeniedException();
+            }
+        }
+    }
+
+    private function hasConfig($action)
+    {
+        return array_key_exists($action, $this->config) && $this->config[$action];
+    }
+
+    private function getConfig($action)
+    {
+        if($this->hasConfig($action)) {
+            return $this->config[$action];
+        }
+        return false;
     }
 
     /**

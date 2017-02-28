@@ -2,6 +2,7 @@
 
 namespace Caxy\EasySonataAdminBundle\DependencyInjection\Compiler;
 
+use Caxy\EasySonataAdminBundle\Admin\AutoAdmin;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -17,7 +18,7 @@ class AdminBuilderPass implements CompilerPassInterface
             foreach ($config['entities'] as $name => $entity) {
                 $class = $entity['class'];
 
-                $definition = new Definition('Caxy\EasySonataAdminBundle\Admin\AutoAdmin',
+                $definition = new Definition(AutoAdmin::class,
                     array(null, $class, null, $entity, $name));
                 $definition->setPublic(true);
                 $definition->addTag('sonata.admin', array('manager_type' => 'orm', 'label' => $name));
